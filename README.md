@@ -2,6 +2,14 @@
 
 A full-featured, interactive, and beautiful **To-Do List App** built using **Django (Backend)** and **HTML, SCSS, JavaScript (Frontend)**. It supports dynamic task creation, editing, filtering, drag-and-drop reordering, color-coded urgency, and both localStorage + API syncing.
 
+## GitHub Repo
+
+[Github Link](https://github.com/Zaibbee69/Todo-List-App)
+
+## License: APACHE LICENSE
+
+Read License File
+
 ---
 
 ## 🌟 Features
