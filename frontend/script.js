@@ -137,6 +137,7 @@ function renderTasks()
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.checked = task.is_completed;
+        checkbox.className = "checker";
 
         // If checkbox is selected at anytime
         checkbox.addEventListener("change", async () => {
@@ -150,12 +151,18 @@ function renderTasks()
 
         // Making the body of element
         const text = document.createElement("span");
-        text.innerText = `${task.title} (${task.priority}) - ${task.due_date || "No due date"} Details ${task.description}`;
+        text.innerHTML = `<span class="task-title ${urgencyClass}">${task.title}</span> 
+        <span class="task-priority"><i>(${task.priority})</i></span>
+        <span class="task-date"><em>- ${task.due_date || "No due date"}</em></span> 
+        <div class="task-description">
+            <i class="fa-solid fa-arrow-right"></i>
+            ${task.description}
+        </div>`;
 
         // Making a delete button for each task
         const deleteBtn = document.createElement("button");
-        deleteBtn.textContent = "🗑️";
-        deleteBtn.classList.add = "delete-btn";
+        deleteBtn.innerHTML = `<i class="fa-solid fa-trash"></i>`;
+        deleteBtn.className = "delete-btn";
         deleteBtn.addEventListener("click", async () => {
             try {
                 await deleteTaskInBackend(task.id);
@@ -168,13 +175,11 @@ function renderTasks()
             }
         });
 
-
-
-
         // Making a edit button for editing tasks
         const editBtn = document.createElement("button");
-        editBtn.textContent = '✏️';
-        editBtn.classList.add = "edit-btn";
+        editBtn.innerHTML = '<i class="fa-solid fa-pencil"></i>';
+        editBtn.className = "edit-btn";
+        editBtn.className = `edit-btn ${urgencyClass}`;
         editBtn.addEventListener("click", () => {
             openEditForm(task);
         });
