@@ -1,53 +1,10 @@
-// Adding the default key for my todo
+// Adding the default key for my todo and API URL for backend
 const LOCAL_STORAGE_KEY = "todo_tasks";
 const API_URL = "http://127.0.0.1:8000/api/tasks/";
-
-
 
 let searchText = "";
 let filterStatus = "all";
 let filterPriority = "all";
-
-
-async function fetchTasksFromBackend() {
-    try {
-        const res = await fetch(API_URL);
-
-        if (!res.ok) throw new Error("Failed to fetch tasks from backend");
-
-        const data = await res.json();
-        saveTasksToLocalStorage(data);
-        // Force re-read from fresh localStorage
-        setTimeout(renderTasks, 0);
-
-    } catch (error) {
-        console.error("Error fetching tasks from backend:", error);
-    }
-}
-
-
-async function createTaskInBackend(task) {
-    const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(task)
-    });
-    return await response.json();
-}
-
-async function updateTaskInBackend(id, task) {
-    await fetch(`${API_URL}${id}/`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(task)
-    });
-}
-
-async function deleteTaskInBackend(id) {
-    await fetch(`${API_URL}${id}/`, {
-        method: "DELETE"
-    });
-}
 
 
 function getTasksFromLocalStorage()
@@ -64,34 +21,6 @@ function saveTasksToLocalStorage(tasks)
 {
     // Saving item to storage but also converting them to strings
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(tasks));
-}
-
-
-function openEditForm(task)
-{
-    document.querySelector("#title").value = task.title;
-    document.querySelector("#description").value = task.description;
-    document.querySelector("#priority").value = task.priority;
-    document.querySelector("#due-date").value = task.due_date;
-
-    // Storing also the id of this task in our form
-    document.querySelector("#task-form").dataset.editingId = task.id;
-}
-
-
-function getUrgencyClass(task)
-{
-    if (!task.due_date) return "no-due-date";
-
-    const today = new Date();
-    const due = new Date(task.due_date);
-    const diffTime = due - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) return "urgent-overdue";
-    if (diffDays === 0) return "urgent-today";
-    if (diffDays <= 3) return "urgent-soon";
-    return "urgent-later";
 }
 
 
@@ -148,16 +77,15 @@ function renderTasks()
             renderTasks();
         });
 
-
         // Making the body of element
         const text = document.createElement("span");
         text.innerHTML = `<span class="task-title ${urgencyClass}">${task.title}</span> 
-        <span class="task-priority"><i>(${task.priority})</i></span>
-        <span class="task-date"><em>- ${task.due_date || "No due date"}</em></span> 
-        <div class="task-description">
-            <i class="fa-solid fa-arrow-right"></i>
-            ${task.description}
-        </div>`;
+            <span class="task-priority"><i>(${task.priority})</i></span>
+            <span class="task-date"><em>- ${task.due_date || "No due date"}</em></span> 
+            <div class="task-description">
+                <i class="fa-solid fa-arrow-right"></i>
+                ${task.description}
+            </div>`;
 
         // Making a delete button for each task
         const deleteBtn = document.createElement("button");
@@ -208,7 +136,8 @@ document.querySelector("#task-form").addEventListener("submit", async (e) => {
     const priority = document.getElementById("priority").value;
     const due_date = document.getElementById("due-date").value || null;
 
-    if (editingId) {
+    if (editingId) 
+    {
         const task = tasks.find(t => t.id === Number(editingId));
 
         task.title = title;
@@ -217,10 +146,12 @@ document.querySelector("#task-form").addEventListener("submit", async (e) => {
         task.due_date = due_date;
         task.updated_at = now;
 
-        await updateTaskInBackend(task.id, task); // 🛰 sync
+        await updateTaskInBackend(task.id, task);
 
         form.removeAttribute("data-editing-id");
-    } else {
+    } 
+    else 
+    {
         const newTask = {
             id: Date.now().toString(),
             title,
@@ -232,8 +163,8 @@ document.querySelector("#task-form").addEventListener("submit", async (e) => {
             due_date
         };
 
-        const savedTask = await createTaskInBackend(newTask); // 🛰 sync
-        newTask.id = savedTask.id; // overwrite ID with backend ID
+        const savedTask = await createTaskInBackend(newTask); 
+        newTask.id = savedTask.id;
 
         tasks.push(newTask);
     }
@@ -242,6 +173,80 @@ document.querySelector("#task-form").addEventListener("submit", async (e) => {
     form.reset();
     renderTasks();
 });
+
+
+function openEditForm(task)
+{
+    // Getting the current values of form
+    document.querySelector("#title").value = task.title;
+    document.querySelector("#description").value = task.description;
+    document.querySelector("#priority").value = task.priority;
+    document.querySelector("#due-date").value = task.due_date;
+
+    // Storing also the id of this task in our form
+    document.querySelector("#task-form").dataset.editingId = task.id;
+}
+
+
+function getUrgencyClass(task)
+{
+    // If no date
+    if (!task.due_date) return "no-due-date";
+
+    // Calculating the date
+    const today = new Date();
+    const due = new Date(task.due_date);
+    const diffTime = due - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // Setting the days style
+    if (diffDays < 0) return "urgent-overdue";
+    if (diffDays === 0) return "urgent-today";
+    if (diffDays <= 3) return "urgent-soon";
+    return "urgent-later";
+}
+
+
+// +--------------All ASYNC Functions for backend-----------------+
+async function fetchTasksFromBackend() {
+    try {
+        const res = await fetch(API_URL);
+
+        if (!res.ok) throw new Error("Failed to fetch tasks from backend");
+
+        const data = await res.json();
+        
+        saveTasksToLocalStorage(data);
+        renderTasks();
+
+    } catch (error) {
+        console.error("Error fetching tasks from backend:", error);
+    }
+}
+
+
+async function createTaskInBackend(task) {
+    const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(task)
+    });
+    return await response.json();
+}
+
+async function updateTaskInBackend(id, task) {
+    await fetch(`${API_URL}${id}/`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(task)
+    });
+}
+
+async function deleteTaskInBackend(id) {
+    await fetch(`${API_URL}${id}/`, {
+        method: "DELETE"
+    });
+}
 
 
 // Render tasks on page load
